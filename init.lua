@@ -18,7 +18,9 @@ local config = {
 	image_margin = 15,
 	outer_margin = 15,
 	bar_color = beautiful.border_focus or "#6666FF",
+	bar_color_muted = beautiful.border_normal or "#000000",
 	volume_control = {tooltip = false},
+	timeout = 1
 }
 
 function create_elements(config)
@@ -88,9 +90,9 @@ end
 
 local function set_radial(radial, volume, state)
 	if volume == 0 or state == "off"  then
-		radial.colors = { "#000000" }
+		radial.colors = { config.bar_color_muted }
 	else
-		radial.colors = { beautiful.border_focus }
+		radial.colors = { config.bar_color }
 	end
 	radial.value = volume
 end
@@ -109,7 +111,7 @@ local function init(self,myconfig)
 	}))
 
 	local t = gears.timer({
-		timeout = 1,
+		timeout = config.timeout,
 		callback = function() volbox.visible = false end,
 		single_shot=true
 	});
