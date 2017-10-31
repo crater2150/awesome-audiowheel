@@ -19,7 +19,7 @@ git submodule add https://github.com/crater2150/awesome-audiowheel.git audiowhee
 
 ## Usage
 
-Include audiowheel in your `awesomerc.lua` and use its methods for volume key
+Include audiowheel in your `rc.lua` and use its methods for volume key
 bindings:
 
 ```lua
