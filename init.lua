@@ -80,11 +80,10 @@ function create_elements(config)
 end
 
 local function get_image(volume, state)
-	local prefix = "/usr/share/icons/Adwaita/256x256/status/audio-volume-"
-	if volume == 0 or state == "off"  then return prefix .. "muted.png"
-	elseif volume <= 33               then return prefix .. "low.png"
-	elseif volume <= 66               then return prefix .. "medium.png"
-	else                                   return prefix .. "high.png"
+	if volume == 0 or state == "off"  then return config.image_prefix .. config.image_muted
+	elseif volume <= 33               then return config.image_prefix .. config.image_low
+	elseif volume <= 66               then return config.image_prefix .. config.image_medium
+	else                                   return config.image_prefix .. config.image_high
 	end
 end
 
