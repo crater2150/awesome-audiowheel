@@ -19,20 +19,42 @@ git submodule add https://github.com/crater2150/awesome-audiowheel.git audiowhee
 
 ## Usage
 
-Include audiowheel in your `rc.lua` and use its methods for volume key
-bindings:
+Include audiowheel in your `rc.lua`, create a new instance and use its
+methods for volume key bindings:
 
 ```lua
-local audiowheel = require("audiowheel")
+audiowheel = require("audiowheel")
+
+speakerwheel = audiowheel {}
 
 -- in your binding table, add:
-    awful.key({}, "XF86AudioRaiseVolume", function() audiowheel:up() end),
-    awful.key({}, "XF86AudioLowerVolume", function() audiowheel:down() end),
-    awful.key({}, "XF86AudioMute",        function() audiowheel:toggle() end)
+    awful.key({}, "XF86AudioRaiseVolume", function() speakerwheel:up() end),
+    awful.key({}, "XF86AudioLowerVolume", function() speakerwheel:down() end),
+    awful.key({}, "XF86AudioMute",        function() speakerwheel:toggle() end)
 ```
+
+You can create several audiowheels for diffent devices, e.g. another wheel for microphone volume ([see below](#customization) for more on the configuration options):
+
+```lua
+micwheel = audiowheel {
+    image_prefix = "/usr/share/icons/Adwaita/48x48/legacy/",
+    image_muted = "microphone-sensitivity-muted.png",
+    image_low = "microphone-sensitivity-low.png",
+    image_medium = "microphone-sensitivity-medium.png",
+    image_high = "microphone-sensitivity-high.png",
+    -- the value for `channel` depends on your sound card and driver
+    volume_control = { tooltip = false, channel = "Dmic0" }
+}
+
+-- add keybindings to different keys, e.g.:
+    awful.key({"Shift"}, "XF86AudioRaiseVolume", function() micwheel:up() end),
+    awful.key({"Shift"}, "XF86AudioLowerVolume", function() micwheel:down() end),
+    awful.key({}, "XF86AudioMicMute",     function() micwheel:toggle() end)
+```
+
 ## Customization
 
-You can append a table to the `require` call to set configuration options. The
+You can set configuration options when initializing a wheel. The
 following call is equivalent to the default configuration:
 
 ```lua
@@ -45,7 +67,7 @@ local audiowheel = require("audiowheel") {
 
 	-- paths for the speaker images. the prefix is concatenated with each of
 	-- the four variants, based on current volume
-	image_prefix = "/usr/share/icons/Adwaita/256x256/status/",
+	image_prefix = "/usr/share/icons/Adwaita/256x256/legacy/",
 	image_muted = "audio-volume-muted.png",
 	image_low = "audio-volume-low.png",
 	image_medium = "audio-volume-medium.png",

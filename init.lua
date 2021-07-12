@@ -6,11 +6,10 @@ wibox = require("wibox")
 gears = require("gears")
 volume_control = require("audiowheel.volume-control")
 log = require("talkative")
-
-local config = {
+local default_config = {
 	size = 140,
 	bg = "#000000aa",
-	image_prefix = "/usr/share/icons/Adwaita/256x256/status/",
+	image_prefix = "/usr/share/icons/Adwaita/256x256/legacy/",
 	image_muted = "audio-volume-muted.png",
 	image_low = "audio-volume-low.png",
 	image_medium = "audio-volume-medium.png",
@@ -23,7 +22,7 @@ local config = {
 	timeout = 1
 }
 
-function create_elements(config)
+local function create_elements(config)
 	local image = wibox.widget {
 		align  = "center",
 		valign = "center",
@@ -51,7 +50,7 @@ function create_elements(config)
 	}
 
 	local volbox = wibox{
-		screen = mouse.screen, 
+		screen = mouse.screen,
 		width = config.size,
 		height = config.size,
 		visible = false,
@@ -79,7 +78,7 @@ function create_elements(config)
 	return volbox, arc, image
 end
 
-local function get_image(volume, state)
+local function get_image(config, volume, state)
 	if volume == 0 or state == "off"  then return config.image_prefix .. config.image_muted
 	elseif volume <= 33               then return config.image_prefix .. config.image_low
 	elseif volume <= 66               then return config.image_prefix .. config.image_medium
@@ -87,7 +86,7 @@ local function get_image(volume, state)
 	end
 end
 
-local function set_radial(radial, volume, state)
+local function set_radial(config, radial, volume, state)
 	if volume == 0 or state == "off"  then
 		radial.colors = { config.bar_color_muted }
 	else
@@ -96,17 +95,17 @@ local function set_radial(radial, volume, state)
 	radial.value = volume
 end
 
-local function init(self,myconfig)
-	awful.util.table.crush(config, myconfig or {})
+
+local function init(self, myconfig)
+	local config = awful.util.table.crush(awful.util.table.clone(default_config), myconfig or {})
 
 	local volbox, arc, image = create_elements(config)
-
 	local volume_cfg = volume_control(awful.util.table.join(config.volume_control, {
 		widget = volbox,
 		callback = function(self, setting)
-			image.image = get_image(setting.volume, setting.state)
-			set_radial(arc, setting.volume, setting.state)
-		end,
+			image.image = get_image(config, setting.volume, setting.state);
+			set_radial(config, arc, setting.volume, setting.state)
+		end
 	}))
 
 	local t = gears.timer({
@@ -124,8 +123,4 @@ end
 
 
 -- init on first method call, if no configure parameters were given on require
-return setmetatable({
-	up = function(self) awful.util.table.crush(self, init()); self:up() end,
-	down = function(self) awful.util.table.crush(self, init()); self:down() end,
-	toggle = function(self) awful.util.table.crush(self, init()); self:toggle() end
-}, { __call = init })
+return setmetatable({}, { __call = init })
