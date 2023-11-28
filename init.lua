@@ -7,7 +7,7 @@ gears = require("gears")
 volume_control = require("audiowheel.volume-control")
 log = require("talkative")
 local default_config = {
-	size = 140,
+	size = 180,
 	bg = "#000000aa",
 	image_prefix = "/usr/share/icons/Adwaita/256x256/legacy/",
 	image_muted = "audio-volume-muted.png",
@@ -17,6 +17,7 @@ local default_config = {
 	image_margin = 15,
 	outer_margin = 15,
 	bar_color = beautiful.border_focus or "#6666FF",
+	bar_color_overdrive = "#FF6666",
 	bar_color_muted = beautiful.border_normal or "#000000",
 	volume_control = {tooltip = false},
 	timeout = 1
@@ -30,17 +31,28 @@ local function create_elements(config)
 		image = config.image_prefix .. config.image_muted
 	}
 
+	local voltext = wibox.widget {
+		text = "n/a %",
+		font = beautiful.fontface .. " 8",
+		align  = 'center',
+    valign = 'center',
+		widget = wibox.widget.textbox
+	}
 	local arc = wibox.widget {
 		{
-			image,
+			{
+				voltext,
+				image,
+				layout = wibox.layout.align.vertical
+			},
 			top    = config.image_margin,
 			bottom = config.image_margin,
 			left   = config.image_margin,
 			right  = config.image_margin,
 			widget = wibox.container.margin
 		},
-		value        = 20,
-		colors       = { config.bar_color },
+		values       = { 0, 20 },
+		colors       = { config.bar_color_overdrive, config.bar_color },
 		max_value    = 100,
 		min_value    = 0,
 		rounded_edge = true,
@@ -90,20 +102,28 @@ local function set_radial(config, radial, volume, state)
 	if volume == 0 or state == "off"  then
 		radial.colors = { config.bar_color_muted }
 	else
-		radial.colors = { config.bar_color }
+		radial.colors = { config.bar_color_overdrive, config.bar_color }
 	end
-	radial.value = volume
+	if volume > 200 then
+		radial.values = { 100, 0}
+	elseif volume > 100 then
+		local overdrive = volume - 100
+		radial.values = { overdrive, 100 - overdrive }
+	else
+		radial.values = { 0, volume }
+	end
 end
 
 
 local function init(self, myconfig)
 	local config = awful.util.table.crush(awful.util.table.clone(default_config), myconfig or {})
 
-	local volbox, arc, image = create_elements(config)
+	local volbox, arc, image, voltext = create_elements(config)
 	local volume_cfg = volume_control(awful.util.table.join(config.volume_control, {
 		widget = volbox,
 		callback = function(self, setting)
 			image.image = get_image(config, setting.volume, setting.state);
+			voltext.text = setting.volume .. " %"
 			set_radial(config, arc, setting.volume, setting.state)
 		end
 	}))
@@ -118,6 +138,7 @@ local function init(self, myconfig)
 	vol.up = function() volbox.visible = true; volume_cfg:up(); t:again() end
 	vol.down = function() volbox.visible = true; volume_cfg:down(); t:again() end
 	vol.toggle = function() volbox.visible = true; volume_cfg:toggle(); t:again() end
+	vol.mixer = volume_cfg
 	return vol
 end
 
