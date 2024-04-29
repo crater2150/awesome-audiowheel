@@ -1,11 +1,12 @@
 -- radial volume widget popping up in the middle of the screen when changing
 -- volume.
 -- Depends on volume-control (https://github.com/deficient/volume-control.git)
-awful = require("awful")
-wibox = require("wibox")
-gears = require("gears")
-volume_control = require("audiowheel.volume-control")
-log = require("talkative")
+local awful = require("awful")
+local wibox = require("wibox")
+local gears = require("gears")
+local beautiful = require("beautiful")
+local volume_control = require("audiowheel.volume-control")
+local log = require("talkative")
 local default_config = {
 	size = 180,
 	bg = "#000000aa",
@@ -19,69 +20,69 @@ local default_config = {
 	bar_color = beautiful.border_focus or "#6666FF",
 	bar_color_overdrive = "#FF6666",
 	bar_color_muted = beautiful.border_normal or "#000000",
-	volume_control = {tooltip = false},
-	timeout = 1
+	volume_control = { tooltip = false },
+	timeout = 1,
 }
 
 local function create_elements(config)
-	local image = wibox.widget {
-		align  = "center",
+	local image = wibox.widget({
+		align = "center",
 		valign = "center",
 		widget = wibox.widget.imagebox,
-		image = config.image_prefix .. config.image_muted
-	}
+		image = config.image_prefix .. config.image_muted,
+	})
 
-	local voltext = wibox.widget {
+	local voltext = wibox.widget({
 		text = "n/a %",
 		font = beautiful.fontface .. " 8",
-		align  = 'center',
-    valign = 'center',
-		widget = wibox.widget.textbox
-	}
-	local arc = wibox.widget {
+		align = "center",
+		valign = "center",
+		widget = wibox.widget.textbox,
+	})
+	local arc = wibox.widget({
 		{
 			{
 				voltext,
 				image,
-				layout = wibox.layout.align.vertical
+				layout = wibox.layout.align.vertical,
 			},
-			top    = config.image_margin,
+			top = config.image_margin,
 			bottom = config.image_margin,
-			left   = config.image_margin,
-			right  = config.image_margin,
-			widget = wibox.container.margin
+			left = config.image_margin,
+			right = config.image_margin,
+			widget = wibox.container.margin,
 		},
-		values       = { 0, 20 },
-		colors       = { config.bar_color_overdrive, config.bar_color },
-		max_value    = 100,
-		min_value    = 0,
+		values = { 0, 20 },
+		colors = { config.bar_color_overdrive, config.bar_color },
+		max_value = 100,
+		min_value = 0,
 		rounded_edge = true,
 		border_width = 0.5,
 		border_color = "#000000",
-		widget       = wibox.container.arcchart
-	}
+		widget = wibox.container.arcchart,
+	})
 
-	local volbox = wibox{
+	local volbox = wibox({
 		screen = mouse.screen,
 		width = config.size,
 		height = config.size,
 		visible = false,
 		ontop = true,
 		bg = "#00000000",
-	}
-	volbox.widget = wibox.widget {
+	})
+	volbox.widget = wibox.widget({
 		{
 			arc,
-			top    = config.outer_margin,
+			top = config.outer_margin,
 			bottom = config.outer_margin,
-			left   = config.outer_margin,
-			right  = config.outer_margin,
-			widget = wibox.container.margin
+			left = config.outer_margin,
+			right = config.outer_margin,
+			widget = wibox.container.margin,
 		},
 		widget = wibox.container.background,
 		bg = config.bg,
-		shape = gears.shape.circle
-	}
+		shape = gears.shape.circle,
+	})
 
 	local geo = volbox.screen.geometry
 	volbox.x = geo.x + ((geo.width - volbox.width) / 2)
@@ -91,21 +92,25 @@ local function create_elements(config)
 end
 
 local function get_image(config, volume, state)
-	if volume == 0 or state == "off"  then return config.image_prefix .. config.image_muted
-	elseif volume <= 33               then return config.image_prefix .. config.image_low
-	elseif volume <= 66               then return config.image_prefix .. config.image_medium
-	else                                   return config.image_prefix .. config.image_high
+	if volume == 0 or state == "off" then
+		return config.image_prefix .. config.image_muted
+	elseif volume <= 33 then
+		return config.image_prefix .. config.image_low
+	elseif volume <= 66 then
+		return config.image_prefix .. config.image_medium
+	else
+		return config.image_prefix .. config.image_high
 	end
 end
 
 local function set_radial(config, radial, volume, state)
-	if volume == 0 or state == "off"  then
+	if volume == 0 or state == "off" then
 		radial.colors = { config.bar_color_muted }
 	else
 		radial.colors = { config.bar_color_overdrive, config.bar_color }
 	end
 	if volume > 200 then
-		radial.values = { 100, 0}
+		radial.values = { 100, 0 }
 	elseif volume > 100 then
 		local overdrive = volume - 100
 		radial.values = { overdrive, 100 - overdrive }
@@ -114,7 +119,6 @@ local function set_radial(config, radial, volume, state)
 	end
 end
 
-
 local function init(self, myconfig)
 	local config = awful.util.table.crush(awful.util.table.clone(default_config), myconfig or {})
 
@@ -122,26 +126,29 @@ local function init(self, myconfig)
 	local volume_cfg = volume_control(awful.util.table.join(config.volume_control, {
 		widget = volbox,
 		callback = function(self, setting)
-			image.image = get_image(config, setting.volume, setting.state);
+			image.image = get_image(config, setting.volume, setting.state)
 			voltext.text = setting.volume .. " %"
 			set_radial(config, arc, setting.volume, setting.state)
-		end
+		end,
 	}))
 
 	local t = gears.timer({
 		timeout = config.timeout,
-		callback = function() volbox.visible = false end,
-		single_shot=true
-	});
+		callback = function()
+			volbox.visible = false
+		end,
+		single_shot = true,
+	})
 
 	local vol = {}
-	vol.up = function() volbox.visible = true; volume_cfg:up(); t:again() end
-	vol.down = function() volbox.visible = true; volume_cfg:down(); t:again() end
+	-- stylua: ignore start
+	vol.up     = function() volbox.visible = true; volume_cfg:up();     t:again() end
+	vol.down   = function() volbox.visible = true; volume_cfg:down();   t:again() end
 	vol.toggle = function() volbox.visible = true; volume_cfg:toggle(); t:again() end
 	vol.mixer = volume_cfg
 	return vol
+	-- stylua: ignore end
 end
-
 
 -- init on first method call, if no configure parameters were given on require
 return setmetatable({}, { __call = init })
