@@ -17,7 +17,7 @@ local default_config = {
 	bar_color = beautiful.border_focus or "#6666FF",
 	bar_color_overdrive = "#FF6666",
 	bar_color_muted = beautiful.border_normal or "#000000",
-	volume_control = { tooltip = false },
+	volume_control = {},
 	timeout = 1,
 	use_alsactl = false,
 }
