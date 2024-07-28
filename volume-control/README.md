@@ -1,121 +1,60 @@
-## awesome.volume-control
+# audiowheel.volume-control
 
-### Description
+## Description
 
-Volume indicator+control widget for awesome window manager.
+Volume control library for awesomeWM, based on
+https://github.com/deficient/volume-control.git, adapted for audiowheel.
 
-### Installation
+## Configuration options
 
-Drop the script into your awesome config folder. Suggestion:
+The available options differ for the pulse-based implementation (which is used
+by default) and the alsa-based implementation.
 
-```bash
-cd ~/.config/awesome
-git clone https://github.com/deficient/volume-control.git
-```
+### Pulse options
 
-
-### Usage
-
-In your `~/.config/awesome/rc.lua`:
+You can specify any subset of the following arguments in the `volume_control`
+table in audiowheel's config (listed here with the default values):
 
 ```lua
--- load the widget code
-local volume_control = require("volume-control")
-
-
--- define your volume control, using default settings:
-volumecfg = volume_control({})
-
-
--- add the widget to your wibox
-...
-right_layout:add(volumecfg.widget)
-...
-
-
--- add key bindings
-local globalkeys = awful.util.table.join(
-    ...
-    awful.key({}, "XF86AudioRaiseVolume", function() volumecfg:up() end),
-    awful.key({}, "XF86AudioLowerVolume", function() volumecfg:down() end),
-    awful.key({}, "XF86AudioMute",        function() volumecfg:toggle() end),
-    ...
-)
+device = nil
 ```
-
-### Constructor
-
-You can specify any subset of the following arguments to the constructor.
-The default values are as follows:
+Allows you to set the device manually. If left at `nil`, will use your default
+device (i.e. depending on the type `@DEFAULT_SOURCE@`, `@DEFAULT_MONITOR@`, or
+`@DEFAULT_SINK@`)
 
 ```lua
-volumecfg = volume_control({
-  device  = nil,            -- e.g.: "default", "pulse"
-  cardid  = nil,            -- e.g.: 0, 1, ...
-  channel = "Master",
-  step    = '5%',           -- step size for up/down
-  lclick  = "toggle",       -- mouse actions described below
-  mclick  = "pavucontrol",
-  rclick  = "pavucontrol",
-  widget  = nil,            -- use this instead of creating a awful.widget.textbox
-  callback = nil,           -- called to update the widget: `callback(self, state)`
-})
+type = "sink"
 ```
-
-Try, `device="pulse"` if having problems.
-
-### Mouse actions
-
-The easiest way to customize what happens on left/right/middle click is to
-specify additional arguments to the constructor. These can be of any of the
-following kinds:
-
-- name of a member function: `"up"`, `"down"`, `"toggle"`, `"mute"`, `"get"`
-- command string to execute
-- a callable that will be called with the volume control as first parameter
-
-E.g.:
+Can be `"sink"`, `"source"`, or `"monitor"`
 
 ```lua
-volumecfg = volume_control({
-  lclick="toggle",                        -- name of member function
-  mclick=TERMINAL .. " -x alsamixer",     -- command to execute
-  rclick=function(self) self:mute() end,  -- callable, equivalent to "mute"
-})
+step = '5%'
 ```
-
-### Icon widget
-
-You can use the module as a basis to implement your own volume widget. For
-example, an icon widget can be created as follows:
+Sets the step size used by volume `:up()` and `:down()` methods.
+Any format accepted by `pactl set-volume` is allowed, signs (`+` or `-`) are added automatically.
 
 ```lua
-local function get_image(volume, state)
-    local icondir = os.getenv("HOME") .. "/.local/share/icons/"
-    if volume == 0 or state == "off"  then return icondir .. "audio_mute.png"
-    elseif volume <= 33               then return icondir .. "audio_low.png"
-    elseif volume <= 66               then return icondir .. "audio_med.png"
-    else                                   return icondir .. "audio_high.png"
-    end
-end
-
-local volume_widget = volume_control {
-    tooltip = true,
-    widget = wibox.widget.imagebox(),
-    callback = function(self, setting)
-        self.widget:set_image(
-            get_image(setting.volume, setting.state))
-    end,
-}
+timeout = nil
 ```
+If set, the library will update the current state periodically. If you use it
+inside audiowheel, you should not set this, as an update is called, whenever the
+audiowheel widget is displayed.
 
-### Requirements
+### Alsa options
 
-* [awesome 4.0](http://awesome.naquadah.org/) or possibly 3.5
+If you set `use_alsactl = true` in audiowheel's config, you can specify any
+subset of the following arguments in the `volume_control` table  (listed here
+with the default values):
 
-### Alternatives
+```lua
+device  = nil,      -- e.g.: "default", "pulse"
+cardid  = nil,      -- e.g.: 0, 1, ...
+channel = "Master",
+```
+Specify the ALSA device, card and channel, that should be used.
 
-If you like a volume control with an icon instead of text, I suggest to use
-[pasystray](https://github.com/christophgysin/pasystray), which is a more
-comprehensible solution and built for the systray (not awesome widget) with a
-much nicer menu.
+```lua
+step = '5%'
+```
+Sets the step size used by volume `:up()` and `:down()` methods.
+Any format accepted by `amixer set` is allowed, signs (`+` or `-`) are added automatically.

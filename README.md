@@ -5,7 +5,7 @@ arcchart with the current volume for a few seconds whenever a volume key is pres
 
 ![example](https://user-images.githubusercontent.com/415635/32248192-21094d06-be85-11e7-9c05-d9553c85fca8.gif)
 
-*requires awesome 4.0+. based on ![deficient/volume-control](https://github.com/deficient/volume-control)*
+*requires awesome 4.0+. based on [deficient/volume-control](https://github.com/deficient/volume-control)*
 
 ## Installation
 
@@ -42,8 +42,14 @@ micwheel = audiowheel {
     image_low = "microphone-sensitivity-low.png",
     image_medium = "microphone-sensitivity-medium.png",
     image_high = "microphone-sensitivity-high.png",
-    -- the value for `channel` depends on your sound card and driver
-    volume_control = { tooltip = false, channel = "Dmic0" }
+
+    -- Uses the default pulseaudio source
+	volume_control = { type = "source" },
+
+    -- alternatively, if you don't use pulseaudio or pipewire-pulse, you need to
+    -- set use_alsactl (see below) and define the channel, which depends on your
+    -- soundcard
+    volume_control = { channel = "Dmic0" }
 }
 
 -- add keybindings to different keys, e.g.:
@@ -85,12 +91,13 @@ local audiowheel = require("audiowheel") {
 	-- time after the last keypress to hide the widget again
 	timeout = 1
 
-	-- configuration table for volume-control. see volume-control's readme
-	-- for more info
-	volume_control = {tooltip = false},
+	-- configuration table for volume-control, see below
+	volume_control = {},
 
     -- if set to true, use the original version of volume-control, otherwise use
     -- the pactl-based version. If in doubt, keep the pactl based version
 	use_alsactl = false,
 }
 ```
+The detailed documentation for the `volume_control` option can be found in the
+[`volume-control` README](volume-control/README.md).
