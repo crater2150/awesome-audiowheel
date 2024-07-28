@@ -88,5 +88,9 @@ local audiowheel = require("audiowheel") {
 	-- configuration table for volume-control. see volume-control's readme
 	-- for more info
 	volume_control = {tooltip = false},
+
+    -- if set to true, use the original version of volume-control, otherwise use
+    -- the pactl-based version. If in doubt, keep the pactl based version
+	use_alsactl = false,
 }
 ```

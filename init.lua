@@ -1,12 +1,9 @@
 -- radial volume widget popping up in the middle of the screen when changing
 -- volume.
--- Depends on volume-control (https://github.com/deficient/volume-control.git)
 local awful = require("awful")
 local wibox = require("wibox")
 local gears = require("gears")
 local beautiful = require("beautiful")
-local volume_control = require("audiowheel.volume-control")
-local log = require("talkative")
 local default_config = {
 	size = 180,
 	bg = "#000000aa",
@@ -22,6 +19,7 @@ local default_config = {
 	bar_color_muted = beautiful.border_normal or "#000000",
 	volume_control = { tooltip = false },
 	timeout = 1,
+	use_alsactl = false,
 }
 
 local function loadIcon(path, icon_size)
@@ -137,6 +135,9 @@ local function init(self, myconfig)
 	local config = awful.util.table.crush(awful.util.table.clone(default_config), myconfig or {})
 
 	local volbox, arc, image, voltext = create_elements(config)
+	local volume_control = config.use_alsactl and require("audiowheel.volume-control")
+		or require("audiowheel.volume-control.pulse")
+
 	local volume_cfg = volume_control(awful.util.table.join(config.volume_control, {
 		widget = volbox,
 		callback = function(self, setting)
