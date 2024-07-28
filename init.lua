@@ -10,11 +10,11 @@ local log = require("talkative")
 local default_config = {
 	size = 180,
 	bg = "#000000aa",
-	image_prefix = "/usr/share/icons/Adwaita/256x256/legacy/",
-	image_muted = "audio-volume-muted.png",
-	image_low = "audio-volume-low.png",
-	image_medium = "audio-volume-medium.png",
-	image_high = "audio-volume-high.png",
+	image_prefix = "/usr/share/icons/Papirus/48x48/status/",
+	image_muted = "notification-audio-volume-muted.svg",
+	image_low = "notification-audio-volume-low.svg",
+	image_medium = "notification-audio-volume-medium.svg",
+	image_high = "notification-audio-volume-high.svg",
 	image_margin = 15,
 	outer_margin = 15,
 	bar_color = beautiful.border_focus or "#6666FF",
@@ -24,12 +24,38 @@ local default_config = {
 	timeout = 1,
 }
 
+local function loadIcon(path, icon_size)
+	local cairo = require("lgi").cairo
+	local Rsvg = require("lgi").Rsvg
+	local img = cairo.ImageSurface(cairo.Format.ARGB32, icon_size, icon_size)
+	local cr = cairo.Context(img)
+	local handle = assert(Rsvg.Handle.new_from_file(path))
+	local dim = handle:get_dimensions()
+	local aspect = math.min(icon_size / dim.width, icon_size / dim.height)
+	cr:scale(aspect, aspect)
+	handle:render_cairo(cr)
+	return img
+end
+
+local function get_image(config, volume, state)
+	local icon_size = config.size - 2 * config.image_margin
+	if volume == nil or volume == 0 or state == "off" then
+		return loadIcon(config.image_prefix .. config.image_muted, icon_size)
+	elseif volume <= 33 then
+		return loadIcon(config.image_prefix .. config.image_low, icon_size)
+	elseif volume <= 66 then
+		return loadIcon(config.image_prefix .. config.image_medium, icon_size)
+	else
+		return loadIcon(config.image_prefix .. config.image_high, icon_size)
+	end
+end
+
 local function create_elements(config)
 	local image = wibox.widget({
 		align = "center",
 		valign = "center",
 		widget = wibox.widget.imagebox,
-		image = config.image_prefix .. config.image_muted,
+		image = get_image(config, 0, "off"),
 	})
 
 	local voltext = wibox.widget({
@@ -89,18 +115,6 @@ local function create_elements(config)
 	volbox.y = geo.y + ((geo.height - volbox.height) / 2)
 
 	return volbox, arc, image, voltext
-end
-
-local function get_image(config, volume, state)
-	if volume == nil or volume == 0 or state == "off" then
-		return config.image_prefix .. config.image_muted
-	elseif volume <= 33 then
-		return config.image_prefix .. config.image_low
-	elseif volume <= 66 then
-		return config.image_prefix .. config.image_medium
-	else
-		return config.image_prefix .. config.image_high
-	end
 end
 
 local function set_radial(config, radial, volume, state)
