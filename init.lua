@@ -88,11 +88,11 @@ local function create_elements(config)
 	volbox.x = geo.x + ((geo.width - volbox.width) / 2)
 	volbox.y = geo.y + ((geo.height - volbox.height) / 2)
 
-	return volbox, arc, image
+	return volbox, arc, image, voltext
 end
 
 local function get_image(config, volume, state)
-	if volume == 0 or state == "off" then
+	if volume == nil or volume == 0 or state == "off" then
 		return config.image_prefix .. config.image_muted
 	elseif volume <= 33 then
 		return config.image_prefix .. config.image_low
@@ -126,9 +126,11 @@ local function init(self, myconfig)
 	local volume_cfg = volume_control(awful.util.table.join(config.volume_control, {
 		widget = volbox,
 		callback = function(self, setting)
-			image.image = get_image(config, setting.volume, setting.state)
-			voltext.text = setting.volume .. " %"
-			set_radial(config, arc, setting.volume, setting.state)
+			if setting.volume then
+				image.image = get_image(config, setting.volume, setting.state)
+				voltext.text = setting.volume .. " %"
+				set_radial(config, arc, setting.volume, setting.state)
+			end
 		end,
 	}))
 
@@ -142,12 +144,13 @@ local function init(self, myconfig)
 
 	local vol = {}
 	-- stylua: ignore start
-	vol.up     = function() volbox.visible = true; volume_cfg:up();     t:again() end
-	vol.down   = function() volbox.visible = true; volume_cfg:down();   t:again() end
-	vol.toggle = function() volbox.visible = true; volume_cfg:toggle(); t:again() end
+	vol.up     = function() volume_cfg:update(); volbox.visible = true; volume_cfg:up();     t:again() end
+	vol.down   = function() volume_cfg:update(); volbox.visible = true; volume_cfg:down();   t:again() end
+	vol.toggle = function() volume_cfg:update(); volbox.visible = true; volume_cfg:toggle(); t:again() end
+	-- stylua: ignore end
+
 	vol.mixer = volume_cfg
 	return vol
-	-- stylua: ignore end
 end
 
 -- init on first method call, if no configure parameters were given on require
