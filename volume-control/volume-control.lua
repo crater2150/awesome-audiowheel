@@ -73,7 +73,7 @@ function vcontrol:update(status)
 end
 
 function vcontrol:mixercommand(...)
-	local args = awful.util.table.join(
+	local args = gears.table.join(
 		{ self.cmd },
 		self.device and { "-D", self.device } or {},
 		self.cardid and { "-c", self.cardid } or {},
