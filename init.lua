@@ -132,13 +132,13 @@ local function set_radial(config, radial, volume, state)
 end
 
 local function init(self, myconfig)
-	local config = awful.util.table.crush(awful.util.table.clone(default_config), myconfig or {})
+	local config = gears.table.crush(gears.table.clone(default_config), myconfig or {})
 
 	local volbox, arc, image, voltext = create_elements(config)
 	local volume_control = config.use_alsactl and require("audiowheel.volume-control")
 		or require("audiowheel.volume-control.pulse")
 
-	local volume_cfg = volume_control(awful.util.table.join(config.volume_control, {
+	local volume_cfg = volume_control(gears.table.join(config.volume_control, {
 		widget = volbox,
 		callback = function(self, setting)
 			if setting.volume then

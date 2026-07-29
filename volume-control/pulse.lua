@@ -64,10 +64,7 @@ function vcontrol:update()
 end
 
 function vcontrol:mixercommand(action, property, ...)
-	local args = awful.util.table.join(
-		{ self.cmd, action .. "-" .. self.type .. "-" .. property, self.device },
-		{ ... }
-	)
+	local args = gears.table.join({ self.cmd, action .. "-" .. self.type .. "-" .. property, self.device }, { ... })
 	return util.readcommand(util.make_argv(args))
 end
 
